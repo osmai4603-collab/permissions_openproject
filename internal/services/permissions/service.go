@@ -6,13 +6,23 @@ import (
 
 // IPermissionService defines the interface for managing and evaluating OpenProject permissions.
 type IPermissionService interface {
-	GetPermission(id string) (Permission, bool)
+	GetPermission(id string) *Permission
 	GetAllPermissions() []Permission
 	GetPermissionsByContext(ctx Context) []Permission
 	GetPermissionsByModule(module Module) []Permission
 	ResolveRevocation(activePermissionIDs []string, permissionToRemove string) []string
 	ValidatePermissionsForContext(permissionIDs []string, targetContext Context) []string
 	HasPermission(grantedPermissions []string, requiredPermission string) bool
+}
+
+func GetPermission(id string) *Permission {
+	perms := GetDefaultPermissions()
+	for _, perm := range perms {
+		if perm.ID == id {
+			return &perm
+		}
+	}
+	return nil
 }
 
 // Service provides OpenProject permission management, validation, and evaluation.
@@ -23,7 +33,7 @@ type Service struct {
 
 // NewService instantiates a new permissions service populated with the OpenProject catalog.
 func NewService() *Service {
-	all := AllPermissions()
+	all := GetDefaultPermissions()
 	cat := make(map[string]Permission, len(all))
 	for _, p := range all {
 		cat[p.ID] = p
@@ -45,9 +55,12 @@ func NewService() *Service {
 }
 
 // GetPermission returns a permission definition by its ID.
-func (s *Service) GetPermission(id string) (Permission, bool) {
+func (s *Service) GetPermission(id string) *Permission {
 	p, ok := s.catalog[id]
-	return p, ok
+	if ok {
+		return &p
+	}
+	return nil
 }
 
 // GetAllPermissions returns all registered permissions in deterministic order.

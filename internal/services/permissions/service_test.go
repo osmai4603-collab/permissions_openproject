@@ -6,7 +6,7 @@ import (
 )
 
 func TestAllPermissions_NoDuplicates(t *testing.T) {
-	all := AllPermissions()
+	all := GetDefaultPermissions()
 	if len(all) == 0 {
 		t.Fatal("expected permissions to be registered, got 0")
 	}
@@ -28,7 +28,8 @@ func TestAllPermissions_NoDuplicates(t *testing.T) {
 }
 
 func TestGlobalPermissions(t *testing.T) {
-	globals := GlobalPermissions()
+	srv := NewService()
+	globals := srv.GetPermissionsByModule(ModuleGlobal)
 	if len(globals) != 11 {
 		t.Fatalf("expected 11 global permissions, got %d", len(globals))
 	}
@@ -54,8 +55,8 @@ func TestWorkPackages_MultiContext(t *testing.T) {
 	}
 
 	for _, id := range expectedMulti {
-		p, ok := PermissionByID(id)
-		if !ok {
+		p := GetPermission(id)
+		if p == nil {
 			t.Errorf("expected permission %s to exist", id)
 			continue
 		}
@@ -167,13 +168,13 @@ func TestCatalogCompleteness(t *testing.T) {
 		PermViewWiki, PermViewWikiHistory, PermEditWikiPages, PermManageWiki,
 	}
 
-	all := AllPermissions()
+	all := GetDefaultPermissions()
 	if len(catalogPerms) != len(all) {
 		t.Fatalf("catalog defines %d keys, but registry has %d permissions", len(catalogPerms), len(all))
 	}
 
 	for _, key := range catalogPerms {
-		if _, ok := PermissionByID(key); !ok {
+		if perm := GetPermission(key); perm == nil {
 			t.Errorf("catalog key %q not found in registered permissions", key)
 		}
 	}
@@ -185,7 +186,7 @@ func TestGetDefaultPermissions(t *testing.T) {
 		t.Fatalf("expected 125 permissions from GetDefaultPermissions, got %d", len(defaults))
 	}
 
-	all := AllPermissions()
+	all := GetDefaultPermissions()
 	if len(defaults) != len(all) {
 		t.Fatalf("GetDefaultPermissions (%d) does not match AllPermissions (%d)", len(defaults), len(all))
 	}
@@ -213,19 +214,18 @@ func TestGetDefaultPermissions(t *testing.T) {
 			t.Errorf("permission %s has empty PermissibleOn", p.ID)
 		}
 
+		perm := GetPermission(p.ID)
+
 		// Cross-reference with registry
-		regP, ok := PermissionByID(p.ID)
-		if !ok {
+		if perm == nil {
 			t.Errorf("permission %s not found in registry", p.ID)
 			continue
 		}
-		if regP.Module != p.Module {
-			t.Errorf("module mismatch for %s: %s vs %s", p.ID, regP.Module, p.Module)
+		if perm.Module != p.Module {
+			t.Errorf("module mismatch for %s: %s vs %s", p.ID, perm.Module, p.Module)
 		}
-		if !slices.Equal(regP.PermissibleOn, p.PermissibleOn) {
-			t.Errorf("permissible_on mismatch for %s: %v vs %v", p.ID, regP.PermissibleOn, p.PermissibleOn)
+		if !slices.Equal(perm.PermissibleOn, p.PermissibleOn) {
+			t.Errorf("permissible_on mismatch for %s: %v vs %v", p.ID, perm.PermissibleOn, p.PermissibleOn)
 		}
 	}
 }
-
-
