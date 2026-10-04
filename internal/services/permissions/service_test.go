@@ -179,3 +179,53 @@ func TestCatalogCompleteness(t *testing.T) {
 	}
 }
 
+func TestGetDefaultPermissions(t *testing.T) {
+	defaults := GetDefaultPermissions()
+	if len(defaults) != 125 {
+		t.Fatalf("expected 125 permissions from GetDefaultPermissions, got %d", len(defaults))
+	}
+
+	all := AllPermissions()
+	if len(defaults) != len(all) {
+		t.Fatalf("GetDefaultPermissions (%d) does not match AllPermissions (%d)", len(defaults), len(all))
+	}
+
+	seen := make(map[string]bool)
+	for _, p := range defaults {
+		if p.ID == "" {
+			t.Errorf("empty ID found in default permissions")
+		}
+		if seen[p.ID] {
+			t.Errorf("duplicate ID %q in GetDefaultPermissions", p.ID)
+		}
+		seen[p.ID] = true
+
+		if p.DisplayName == "" {
+			t.Errorf("permission %s has empty DisplayName", p.ID)
+		}
+		if p.Description == "" {
+			t.Errorf("permission %s has empty Description", p.ID)
+		}
+		if p.Module == "" {
+			t.Errorf("permission %s has empty Module", p.ID)
+		}
+		if len(p.PermissibleOn) == 0 {
+			t.Errorf("permission %s has empty PermissibleOn", p.ID)
+		}
+
+		// Cross-reference with registry
+		regP, ok := PermissionByID(p.ID)
+		if !ok {
+			t.Errorf("permission %s not found in registry", p.ID)
+			continue
+		}
+		if regP.Module != p.Module {
+			t.Errorf("module mismatch for %s: %s vs %s", p.ID, regP.Module, p.Module)
+		}
+		if !slices.Equal(regP.PermissibleOn, p.PermissibleOn) {
+			t.Errorf("permissible_on mismatch for %s: %v vs %v", p.ID, regP.PermissibleOn, p.PermissibleOn)
+		}
+	}
+}
+
+
