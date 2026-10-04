@@ -6,19 +6,19 @@ package perms
 
 var (
 	ViewTeamPlanner = Permission{
-		ID:          "view_team_planner",
-		DisplayName: "View team planner",
-		Description: "Allows users to view team planner views.",
-		Context:     ContextProject,
-		Module:      ModuleTeamPlanner,
+		ID:            "view_team_planner",
+		DisplayName:   "View team planner",
+		Description:   "Allows users to view team planner views.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleTeamPlanner,
 	}
 
 	ManageTeamPlanner = Permission{
-		ID:          "manage_team_planner",
-		DisplayName: "Manage team planner",
-		Description: "Allows users to create, edit, and delete team planner views.",
-		Context:     ContextProject,
-		Module:      ModuleTeamPlanner,
+		ID:            "manage_team_planner",
+		DisplayName:   "Manage team planner",
+		Description:   "Allows users to create, edit, and delete team planner views.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleTeamPlanner,
 	}
 )
 

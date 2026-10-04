@@ -180,7 +180,7 @@ end
 
 يعتمد OpenProject هندسة دفاعية متعددة الطبقات (Multi-layered Authorization Architecture) لضمان عدم تسريب البيانات أو تجاوز الصلاحيات:
 
-```
+```text
 [ Frontend: Angular & Primer ]
        │ (يفحص الروابط عبر ModelAuthService)
        ▼

@@ -6,19 +6,19 @@ package perms
 
 var (
 	ViewDocuments = Permission{
-		ID:          "view_documents",
-		DisplayName: "View documents",
-		Description: "Allows users to view project documents.",
-		Context:     ContextProject,
-		Module:      ModuleDocuments,
+		ID:            "view_documents",
+		DisplayName:   "View documents",
+		Description:   "Allows users to view project documents.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleDocuments,
 	}
 
 	ManageDocuments = Permission{
-		ID:          "manage_documents",
-		DisplayName: "Manage documents",
-		Description: "Allows users to create, edit, and delete project documents.",
-		Context:     ContextProject,
-		Module:      ModuleDocuments,
+		ID:            "manage_documents",
+		DisplayName:   "Manage documents",
+		Description:   "Allows users to create, edit, and delete project documents.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleDocuments,
 	}
 )
 

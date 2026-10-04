@@ -1,5 +1,7 @@
 package perms
 
+import "slices"
+
 // ──────────────────────────────────────────────
 // Permission registry — aggregation and lookup
 // ──────────────────────────────────────────────
@@ -7,6 +9,7 @@ package perms
 // AllPermissions returns every registered permission across all modules.
 func AllPermissions() []Permission {
 	var all []Permission
+	all = append(all, GlobalPermissions()...)
 	all = append(all, ProjectPermissions()...)
 	all = append(all, WorkPackagePermissions()...)
 	all = append(all, BoardsPermissions()...)
@@ -51,7 +54,7 @@ func PermissionsByModule(module Module) []Permission {
 func PermissionsByContext(ctx Context) []Permission {
 	var result []Permission
 	for _, p := range AllPermissions() {
-		if p.Context == ctx {
+		if slices.Contains(p.PermissibleOn, ctx) {
 			result = append(result, p)
 		}
 	}

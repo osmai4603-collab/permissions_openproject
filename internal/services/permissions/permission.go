@@ -1,19 +1,26 @@
 package perms
 
+import "slices"
+
 // Context represents the scope level at which a permission applies.
 type Context string
 
 const (
 	// ContextProject indicates a project-level permission.
 	ContextProject Context = "project"
-	// ContextGlobal indicates a global/system-level permission.
+	// ContextGlobal indicates a platform-wide system-level permission.
 	ContextGlobal Context = "global"
+	// ContextWorkPackage indicates a granular work-package level permission (e.g. Work Package Sharing).
+	ContextWorkPackage Context = "work_package"
+	// ContextProjectQuery indicates a granular saved project query permission.
+	ContextProjectQuery Context = "project_query"
 )
 
 // Module represents the functional module a permission belongs to.
 type Module string
 
 const (
+	ModuleGlobal       Module = "global"
 	ModuleProject      Module = "project"
 	ModuleWorkPackages Module = "work_packages"
 	ModuleGantt        Module = "gantt"
@@ -50,9 +57,13 @@ type Permission struct {
 	// Description explains what this permission allows.
 	Description string
 	// Context indicates whether this is a project-level or global permission.
-	Context Context
+	PermissibleOn []Context `json:"permissible_on,omitempty"`
 	// Module is the functional module this permission belongs to.
 	Module Module
 	// Dependencies lists any permissions or conditions this permission depends on.
 	Dependencies []Dependency
+}
+
+func (prm *Permission) AllowsContext(ctx Context) bool {
+	return slices.Contains(prm.PermissibleOn, ctx)
 }

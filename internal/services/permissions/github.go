@@ -6,11 +6,11 @@ package perms
 
 var (
 	ShowGitHubContent = Permission{
-		ID:          "show_github_content",
-		DisplayName: "Show GitHub content",
-		Description: "Allows users to see GitHub pull requests and issues linked to work packages.",
-		Context:     ContextProject,
-		Module:      ModuleGitHub,
+		ID:            "show_github_content",
+		DisplayName:   "Show GitHub content",
+		Description:   "Allows users to see GitHub pull requests and issues linked to work packages.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleGitHub,
 	}
 )
 

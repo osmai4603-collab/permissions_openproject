@@ -10,7 +10,6 @@ type IPermissionService interface {
 	GetAllPermissions() []Permission
 	GetPermissionsByContext(ctx Context) []Permission
 	GetPermissionsByModule(module Module) []Permission
-	ResolveImplied(permissionIDs []string) []string
 	ResolveRevocation(activePermissionIDs []string, permissionToRemove string) []string
 	ValidatePermissionsForContext(permissionIDs []string, targetContext Context) []string
 	HasPermission(grantedPermissions []string, requiredPermission string) bool
@@ -24,11 +23,13 @@ type Service struct {
 
 // NewService instantiates a new permissions service populated with the OpenProject catalog.
 func NewService() *Service {
-	cat := BuildDefaultCatalog()
-	list := make([]Permission, 0, len(cat))
-	for _, p := range cat {
-		list = append(list, p)
+	all := AllPermissions()
+	cat := make(map[string]Permission, len(all))
+	for _, p := range all {
+		cat[p.ID] = p
 	}
+	list := make([]Permission, len(all))
+	copy(list, all)
 
 	sort.Slice(list, func(i, j int) bool {
 		if list[i].Module != list[j].Module {
@@ -60,7 +61,7 @@ func (s *Service) GetAllPermissions() []Permission {
 func (s *Service) GetPermissionsByContext(ctx Context) []Permission {
 	var res []Permission
 	for _, p := range s.listOrdered {
-		if p.Context == ctx || s.isAllowedInContext(p, ctx) {
+		if p.AllowsContext(ctx) || s.isAllowedInContext(p, ctx) {
 			res = append(res, p)
 		}
 	}
@@ -76,43 +77,6 @@ func (s *Service) GetPermissionsByModule(module Module) []Permission {
 		}
 	}
 	return res
-}
-
-// ResolveImplied computes the transitive closure of implied permissions.
-// In OpenProject, granting a higher-privilege permission automatically implies its prerequisite read/access permissions.
-func (s *Service) ResolveImplied(permissionIDs []string) []string {
-	resultMap := make(map[string]struct{})
-	var queue []string
-
-	for _, id := range permissionIDs {
-		if _, exists := s.catalog[id]; exists {
-			if _, seen := resultMap[id]; !seen {
-				resultMap[id] = struct{}{}
-				queue = append(queue, id)
-			}
-		}
-	}
-
-	for len(queue) > 0 {
-		currentID := queue[0]
-		queue = queue[1:]
-
-		if p, ok := s.catalog[currentID]; ok {
-			for _, impliedID := range p.ImpliedPerms {
-				if _, seen := resultMap[impliedID]; !seen {
-					resultMap[impliedID] = struct{}{}
-					queue = append(queue, impliedID)
-				}
-			}
-		}
-	}
-
-	out := make([]string, 0, len(resultMap))
-	for id := range resultMap {
-		out = append(out, id)
-	}
-	sort.Strings(out)
-	return out
 }
 
 // ResolveRevocation determines which permissions remain after revoking a target permission.
@@ -133,11 +97,13 @@ func (s *Service) ResolveRevocation(activePermissionIDs []string, permissionToRe
 		queue = queue[1:]
 
 		// Find any permission that directly or transitively depends on curr
-		if p, ok := s.catalog[curr]; ok {
-			for _, depID := range p.DependentPerms {
-				if _, alreadyMarked := toDelete[depID]; !alreadyMarked {
-					toDelete[depID] = struct{}{}
-					queue = append(queue, depID)
+		for _, p := range s.catalog {
+			for _, dep := range p.Dependencies {
+				if dep.PermissionID == curr {
+					if _, alreadyMarked := toDelete[p.ID]; !alreadyMarked {
+						toDelete[p.ID] = struct{}{}
+						queue = append(queue, p.ID)
+					}
 				}
 			}
 		}
@@ -168,19 +134,19 @@ func (s *Service) ValidatePermissionsForContext(permissionIDs []string, targetCo
 
 		switch targetContext {
 		case ContextGlobal:
-			if p.Context == ContextGlobal || p.IsGlobal {
+			if p.AllowsContext(ContextGlobal) {
 				valid = append(valid, id)
 			}
 		case ContextProject:
-			if p.Context == ContextProject || s.isAllowedInContext(p, ContextProject) {
+			if p.AllowsContext(ContextProject) || s.isAllowedInContext(p, ContextProject) {
 				valid = append(valid, id)
 			}
 		case ContextWorkPackage:
-			if p.Context == ContextWorkPackage || s.isAllowedInContext(p, ContextWorkPackage) {
+			if p.AllowsContext(ContextWorkPackage) || s.isAllowedInContext(p, ContextWorkPackage) {
 				valid = append(valid, id)
 			}
 		case ContextProjectQuery:
-			if p.Context == ContextProjectQuery || s.isAllowedInContext(p, ContextProjectQuery) {
+			if p.AllowsContext(ContextProjectQuery) || s.isAllowedInContext(p, ContextProjectQuery) {
 				valid = append(valid, id)
 			}
 		}

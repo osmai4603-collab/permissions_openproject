@@ -6,11 +6,11 @@ package perms
 
 var (
 	ShowGitLabContent = Permission{
-		ID:          "show_gitlab_content",
-		DisplayName: "Show GitLab content",
-		Description: "Allows users to see GitLab merge requests and issues linked to work packages.",
-		Context:     ContextProject,
-		Module:      ModuleGitLab,
+		ID:            "show_gitlab_content",
+		DisplayName:   "Show GitLab content",
+		Description:   "Allows users to see GitLab merge requests and issues linked to work packages.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleGitLab,
 	}
 )
 

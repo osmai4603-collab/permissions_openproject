@@ -6,19 +6,19 @@ package perms
 
 var (
 	ManageNews = Permission{
-		ID:          "manage_news",
-		DisplayName: "Manage news",
-		Description: "Allows users to create, edit, and delete news entries.",
-		Context:     ContextProject,
-		Module:      ModuleNews,
+		ID:            "manage_news",
+		DisplayName:   "Manage news",
+		Description:   "Allows users to create, edit, and delete news entries.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleNews,
 	}
 
 	CommentNews = Permission{
-		ID:          "comment_news",
-		DisplayName: "Comment news",
-		Description: "Allows users to post comments on news entries.",
-		Context:     ContextProject,
-		Module:      ModuleNews,
+		ID:            "comment_news",
+		DisplayName:   "Comment news",
+		Description:   "Allows users to post comments on news entries.",
+		PermissibleOn: []Context{ContextProject},
+		Module:        ModuleNews,
 	}
 )
 
